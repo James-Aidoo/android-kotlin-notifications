@@ -58,26 +58,49 @@ class EggTimerFragment : Fragment() {
             getString(R.string.egg_notification_channel_name)
         )
 
+        // TODO: Create notification channel for FCM
+        createChannel(
+            getString(R.string.breakfast_notification_channel_id),
+            getString(R.string.breakfast_notification_channel_name)
+        )
+
+        // [Subscribe to FCM breakfast Topic]
+        subscribeTopic()
+
         return binding.root
     }
 
     private fun createChannel(channelId: String, channelName: String) {
         // TODO: Step 1.6 START create a channel
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationChannel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+            val notificationChannel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH).also {
+                it.enableLights(true)
+                it.lightColor = Color.RED
+                it.enableVibration(true)
+                it.setShowBadge(true)
+                it.description = "Time for Breakfast"
+            }
 
-            notificationChannel.enableLights(true)
-            notificationChannel.lightColor = Color.RED
-            notificationChannel.enableVibration(true)
-            notificationChannel.setShowBadge(false)
-            notificationChannel.description = "Time for Breakfast"
-
-            val notificationManager = requireActivity().getSystemService(NotificationManager::class.java)
-            notificationManager?.createNotificationChannel(notificationChannel)
+            val notificationManager = requireActivity().getSystemService(
+                NotificationManager::class.java) as NotificationManager
+            notificationManager.createNotificationChannel(notificationChannel)
         }
 
         // TODO: Step 1.6 END create a channel
 
+    }
+
+    private fun subscribeTopic() {
+        // [START subscribe_topics]
+        FirebaseMessaging.getInstance().subscribeToTopic(TOPIC)
+            .addOnCompleteListener { task ->
+                val msg = if (task.isSuccessful) {
+                    getString(R.string.message_subscribed)
+                } else getString(R.string.message_subscribe_failed)
+
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            }
+        // [END subscribe_topics]
     }
 
     companion object {
